@@ -1,4 +1,4 @@
-import requests, json, re, os
+import requests, json, re, os, time
 
 session = requests.session()
 # 配置用户名（一般是邮箱）
@@ -9,14 +9,21 @@ passwd = os.environ.get('PASSWD')
 SCKEY = os.environ.get('SCKEY')
 # PUSHPLUS
 Token = os.environ.get('TOKEN')
-def push(content):
+
+def push(content):    
     if SCKEY != '1':
-        url = "https://sctapi.ftqq.com/{}.send?title={}&desp={}".format(SCKEY, 'ikuuu签到', content)
+        # 为content增加时间戳
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+        content_with_timestamp = f"{timestamp}: {content}"
+        url = "https://sctapi.ftqq.com/{}.send?title={}&desp={}".format(SCKEY, 'ikuuu签到', content_with_timestamp)
         requests.post(url)
         print('推送完成')
     elif Token != '1':
+        # 为content增加时间戳
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+        content_with_timestamp = f"{timestamp}: {content}"
         headers = {'Content-Type': 'application/json'}
-        json = {"token": Token, 'title': 'ikuuu签到', 'content': content, "template": "json"}
+        json = {"token": Token, 'title': 'ikuuu签到', 'content': content_with_timestamp, "template": "json"}
         resp = requests.post(f'http://www.pushplus.plus/send', json=json, headers=headers).json()
         print('push+推送成功' if resp['code'] == 200 else 'push+推送失败')
     else:
@@ -37,20 +44,22 @@ data = {
         'passwd': passwd
 }
 try:
-    print('进行登录...')
+    print('1.登录')
     response = json.loads(session.post(url=login_url,headers=header,data=data).text)
-    print(response['msg'])
+    print(f"登录返回值：{response['msg']}")
     # 获取账号名称
-    info_html = session.get(url=info_url,headers=header).text
-#     info = "".join(re.findall('<span class="user-name text-bold-600">(.*?)</span>', info_html, re.S))
-#     print(info)
-    # 进行签到
+    # info_html = session.get(url=info_url,headers=header).text
+    # info = "".join(re.findall('<span class="user-name text-bold-600">(.*?)</span>', info_html, re.S))
+    # print(info)
+    print('2.签到')
     result = json.loads(session.post(url=check_url,headers=header).text)
-    print(result['msg'])
+    print(f"签到返回值：{result['msg']}")
     content = result['msg']
-    # 进行推送
+    print('3.推送')
     push(content)
 except:
     content = '签到失败'
     print(content)
     push(content)
+finally:
+    print('4.执行完毕')
