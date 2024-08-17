@@ -1,6 +1,7 @@
 import json
 import os
-import time
+from datetime import datetime, timedelta
+import re
 
 import requests
 
@@ -16,7 +17,7 @@ if email is None or passwd is None:
 
 login_url = os.environ.get('LOGIN_URL', 'https://ikuuu.pw/auth/login')
 checkin_url = os.environ.get('CHECKIN_URL', 'https://ikuuu.pw/user/checkin')
-info_url = os.environ.get('INFO_URL', 'https://ikuuu.pw/user/profile')
+info_url = os.environ.get('INFO_URL', 'https://ikuuu.pw/user')
 
 # server酱
 SCKEY = os.environ.get('SCKEY')
@@ -24,19 +25,23 @@ SCKEY = os.environ.get('SCKEY')
 Token = os.environ.get('TOKEN')
 session = requests.session()
 
+def date_format(date):
+    return date.strftime('%Y-%m-%d %H:%M:%S')
 
 def push(content):
     if SCKEY != '1':
         # 为content增加时间戳
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        content_with_timestamp = f"{timestamp}: {content}"
+        now_utc = date_format(datetime.utcnow())
+        now_bj = date_format(datetime.utcnow() + timedelta(hours=8))
+        content_with_timestamp = f"{now_bj}(UTC {now_utc}): {content}"
         url = "https://sctapi.ftqq.com/{}.send?title={}&desp={}".format(SCKEY, 'ikuuu签到', content_with_timestamp)
         requests.post(url)
         print('推送完成')
     elif Token != '1':
         # 为content增加时间戳
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        content_with_timestamp = f"{timestamp}: {content}"
+        now_utc = date_format(datetime.utcnow())
+        now_bj = date_format(datetime.utcnow() + timedelta(hours=8))
+        content_with_timestamp = f"{now_bj}(UTC {now_utc}): {content}"
         headers = {'Content-Type': 'application/json'}
         json = {"token": Token, 'title': 'ikuuu签到', 'content': content_with_timestamp, "template": "json"}
         resp = requests.post(f'http://www.pushplus.plus/send', json=json, headers=headers).json()
@@ -57,15 +62,23 @@ try:
     print('1.登录')
     response = json.loads(session.post(url=login_url, headers=header, data=data).text)
     print(f"登录返回值：{response['msg']}")
-    # 获取账号名称
-    # info_html = session.get(url=info_url,headers=header).text
-    # info = "".join(re.findall('<span class="user-name text-bold-600">(.*?)</span>', info_html, re.S))
-    # print(info)
+
     print('2.签到')
     result = json.loads(session.post(url=checkin_url, headers=header).text)
     print(f"签到返回值：{result['msg']}")
     content = result['msg']
-    print('3.推送')
+    
+    print('3.剩余流量')
+    info_html = session.get(url=info_url, headers=header).text
+    match = re.search(r'<h4>剩余流量</h4>[\s\S]*?<span class="counter">(\d+(\.\d+)?)</span>', info_html)
+    remaining_num = 'NULL'
+    if match:
+        # 如果找到匹配项，group(1)会捕获括号内的内容
+        remaining_num = match.group(1)
+    print(f"剩余流量：{remaining_num}GB")
+    content += f"，剩余流量{remaining_num}GB"
+    
+    print('4.推送')
     push(content)
 except:
     content = '签到失败'
