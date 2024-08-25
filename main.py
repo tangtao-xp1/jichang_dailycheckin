@@ -28,13 +28,13 @@ session = requests.session()
 def date_format(date):
     return date.strftime('%Y-%m-%d %H:%M:%S')
 
-def push(content):
+def push(title, content):
     if SCKEY != '1':
         # 为content增加时间戳
         now_utc = date_format(datetime.utcnow())
         now_bj = date_format(datetime.utcnow() + timedelta(hours=8))
         content_with_timestamp = f"{now_bj}(UTC {now_utc}): {content}"
-        url = "https://sctapi.ftqq.com/{}.send?title={}&desp={}".format(SCKEY, 'ikuuu签到', content_with_timestamp)
+        url = "https://sctapi.ftqq.com/{}.send?title={}&desp={}".format(SCKEY, title, content_with_timestamp)
         requests.post(url)
         print('推送完成')
     elif Token != '1':
@@ -43,7 +43,7 @@ def push(content):
         now_bj = date_format(datetime.utcnow() + timedelta(hours=8))
         content_with_timestamp = f"{now_bj}(UTC {now_utc}): {content}"
         headers = {'Content-Type': 'application/json'}
-        json = {"token": Token, 'title': 'ikuuu签到', 'content': content_with_timestamp, "template": "json"}
+        json = {"token": Token, 'title': title, 'content': content_with_timestamp, "template": "json"}
         resp = requests.post(f'http://www.pushplus.plus/send', json=json, headers=headers).json()
         print('push+推送成功' if resp['code'] == 200 else 'push+推送失败')
     else:
@@ -79,10 +79,11 @@ try:
     content += f"，剩余流量{remaining_num}GB"
     
     print('4.推送')
-    push(content)
-except:
+    push('ikuuu签到成功', content)
+except exception as e:
     content = '签到失败'
     print(content)
-    push(content)
+    print(e)
+    push('ikuuu签到失败', content)
 finally:
     print('5.执行完毕')
