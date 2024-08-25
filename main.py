@@ -8,6 +8,9 @@ from datetime import datetime, timedelta
 def get_config():
     """获取环境变量配置"""
     config = {
+        # 需要添加Action Secrets，在action的yaml中将secrets转换为环境变量（env: SCKEY: ${{ secrets.SCKEY }}）
+        # 添加Action Secrets的路径如下：
+        # Settings -> Security -> Secrets and variables -> Actions -> New repository secrets
         'email': os.environ.get('EMAIL'),
         'passwd': os.environ.get('PASSWD'),
         'login_url': os.environ.get('LOGIN_URL', 'https://ikuuu.pw/auth/login'),
