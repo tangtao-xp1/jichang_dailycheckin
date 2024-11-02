@@ -13,9 +13,9 @@ def get_config():
         # Settings -> Security -> Secrets and variables -> Actions -> New repository secrets
         'email': os.environ.get('EMAIL'),
         'passwd': os.environ.get('PASSWD'),
-        'login_url': os.environ.get('LOGIN_URL', 'https://ikuuu.pw/auth/login'),
-        'checkin_url': os.environ.get('CHECKIN_URL', 'https://ikuuu.pw/user/checkin'),
-        'info_url': os.environ.get('INFO_URL', 'https://ikuuu.pw/user'),
+        'login_url': os.environ.get('BASE_URL', 'https://ikuuu.one') + '/auth/login',
+        'checkin_url': os.environ.get('BASE_URL', 'https://ikuuu.one') + '/user/checkin',
+        'info_url': os.environ.get('BASE_URL', 'https://ikuuu.one') + '/user',
         'SCKEY': os.environ.get('SCKEY'),
         'PUSHPLUS_TOKEN': os.environ.get('TOKEN')
     }
@@ -83,7 +83,7 @@ def main():
     config = get_config()
 
     header = {
-        'origin': 'https://ikuuu.pw',
+        'origin': os.environ.get('BASE_URL', 'https://ikuuu.one'),
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
     }
     data = {
